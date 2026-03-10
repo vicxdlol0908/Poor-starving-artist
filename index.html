@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Poor Starving Artist - A Commissions Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --primary: #6c5ce7;
+    --success: #00b894;
+    --danger: #d63031;
+    --bg: #f0f3f7;
+    --text: #2d3436;
+    --gold: #f1c40f;
+    --white: #ffffff;
+  }
+
+  body { 
+    font-family: 'Quicksand', sans-serif; 
+    text-align: center; margin: 0; background: var(--bg); color: var(--text);
+    overflow-x: hidden; 
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  h1, h2, .stat-box, .shop-btn, .deliver-btn, #lvl-badge { font-family: 'Fredoka', sans-serif; }
+
+  #header {
+    background: var(--white); padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px;
+    position: sticky; top: 0; z-index: 100;
+  }
+
+  #exp-bar-container { width: 100%; height: 6px; background: #e0e0e0; position: absolute; bottom: 0; left: 0; }
+  #exp-bar-fill { width: 0%; height: 100%; background: var(--primary); transition: width 0.5s; }
+
+  .stat-box { font-size: 16px; font-weight: 600; background: #f8f9fa; padding: 6px 12px; border-radius: 50px; color: var(--primary); }
+  #lvl-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 10px; font-size: 14px; }
+  
+  .shop-btn { background: var(--gold); border: none; padding: 8px 12px; border-radius: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 0 #d4ac0d; }
+  .shop-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #d4ac0d; }
+
+  #game { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; min-height: 200px; }
+  .client { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); width: 200px; border-bottom: 5px solid var(--primary); transition: 0.3s; }
+
+  #drawScreen { display: none; flex-direction: column; align-items: center; padding: 10px; padding-bottom: 50px; }
+  
+  #canvas { 
+    border: 5px solid var(--white); border-radius: 20px; background: white; 
+    touch-action: none; 
+    cursor: crosshair; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    width: 400px; max-width: 90vw; height: auto;
+  }
+
+  .toolbar { display: flex; gap: 8px; margin-bottom: 15px; background: var(--white); padding: 10px; border-radius: 50px; flex-wrap: wrap; justify-content: center; }
+  .tool-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
+  .tool-btn.active { border-color: var(--primary); transform: scale(1.1); }
+  .icon-btn { background: #f1f2f6; border: none; font-size: 18px; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; }
+
+  #timer { font-size: 32px; color: var(--danger); margin: 15px; font-weight: 600; }
+  .deliver-btn { background: var(--success); color: white; border: none; padding: 15px 40px; border-radius: 15px; font-size: 20px; box-shadow: 0 5px 0 #008f72; cursor: pointer; }
+
+  /* Estilo para el botón de reset opcional */
+  .reset-link { font-size: 10px; color: #a4b0be; text-decoration: none; margin-top: 20px; display: block; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="lvl-badge">LVL 1</div>
+  <div class="stat-box" id="coins">💰 0</div>
+  <div class="stat-box" id="multDisplay">📈 x1.0</div>
+  <button class="shop-btn" onclick="buyTime()">⏳ +5s (<span id="timeCost">50</span>)</button>
+  <button class="shop-btn" style="background:#00b894; color:white; box-shadow:0 4px 0 #008f72;" onclick="buyProfit()">💎 +5% (<span id="profitCost">100</span>)</button>
+  <div id="exp-bar-container"><div id="exp-bar-fill"></div></div>
+</div>
+
+<h1 style="margin: 25px 0 5px; color: var(--primary);">Poor Starving Artist</h1>
+<p style="color: #a4b0be; font-weight: 700; font-size: 11px; text-transform: uppercase;">Cloud Save Active (Local) - v2.4</p>
+
+<div id="game"></div>
+
+<div id="drawScreen">
+  <h2 id="orderTitle"></h2>
+  <div class="toolbar">
+    <button class="tool-btn active" style="background: #2d3436;" onclick="setColor('#2d3436', this)"></button>
+    <button class="tool-btn" style="background: #ff7675;" onclick="setColor('#ff7675', this)"></button>
+    <button class="tool-btn" style="background: #74b9ff;" onclick="setColor('#74b9ff', this)"></button>
+    <button class="tool-btn" style="background: #55efc4;" onclick="setColor('#55efc4', this)"></button>
+    <button class="tool-btn" style="background: #ffeaa7;" onclick="setColor('#ffeaa7', this)"></button>
+    <input type="color" id="colorPicker" value="#6c5ce7" onchange="setCustomColor(this.value)">
+    <button class="icon-btn" onclick="fillCanvas()">🪣</button>
+    <button class="icon-btn" onclick="setEraser()">🧽</button>
+    <button class="icon-btn" onclick="clearCanvas()">🗑️</button>
+  </div>
+  <canvas id="canvas" width="400" height="400"></canvas>
+  <div id="timer">20</div>
+  <button class="deliver-btn" onclick="finishDrawing()">¡ENTREGAR!</button>
+</div>
+
+<span class="reset-link" onclick="resetSave()">Borrar progreso y empezar de cero</span>
+
+<script>
+// --- VARIABLES Y ESTADO ---
+let coins = 0, baseTime = 20, timeCost = 50, profitMultiplier = 1.0, profitCost = 100;
+let level = 1, exp = 0, nextLevelExp = 100;
+let currentTimer, timeLeft = 0, activeClients = 0;
+let drawing = false, lastX = 0, lastY = 0, currentColor = '#2d3436', isEraser = false;
+let currentOrderObj, colorsUsed = {};
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const orders = [
+  { name: "un Sol ☀️", colors: ['#ffeaa7', '#fdcb6e', '#f1c40f', '#ff7675'] },
+  { name: "el Mar 🌊", colors: ['#74b9ff', '#0984e3', '#81ecec'] },
+  { name: "una Manzana 🍎", colors: ['#ff7675', '#d63031', '#55efc4'] },
+  { name: "un Bosque 🌳", colors: ['#55efc4', '#00b894', '#2d3436'] },
+  { name: "la Luna 🌙", colors: ['#2d3436', '#6c5ce7', '#ffeaa7'] },
+  { name: "un Corazón ❤️", colors: ['#ff7675', '#d63031'] }
+];
+
+// --- SISTEMA DE GUARDADO (AUTO-SAVE) ---
+function saveGame() {
+  const gameState = {
+    coins, baseTime, timeCost, profitMultiplier, profitCost,
+    level, exp, nextLevelExp
+  };
+  localStorage.setItem('starvingArtistSave', JSON.stringify(gameState));
+  console.log("Juego guardado...");
+}
+
+function loadGame() {
+  const savedData = localStorage.getItem('starvingArtistSave');
+  if (savedData) {
+    const data = JSON.parse(savedData);
+    coins = data.coins || 0;
+    baseTime = data.baseTime || 20;
+    timeCost = data.timeCost || 50;
+    profitMultiplier = data.profitMultiplier || 1.0;
+    profitCost = data.profitCost || 100;
+    level = data.level || 1;
+    exp = data.exp || 0;
+    nextLevelExp = data.nextLevelExp || 100;
+    updateUI();
+  }
+}
+
+function resetSave() {
+  if(confirm("¿Seguro que quieres borrar todo tu progreso artístico?")) {
+    localStorage.removeItem('starvingArtistSave');
+    location.reload();
+  }
+}
+
+// --- MOTOR DE DIBUJO ---
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+function startDrawing(e) {
+  const pos = getPos(e);
+  drawing = true;
+  [lastX, lastY] = [pos.x, pos.y];
+}
+
+function draw(e) {
+  if (!drawing) return;
+  if (e.cancelable) e.preventDefault();
+  const pos = getPos(e);
+  ctx.beginPath();
+  ctx.strokeStyle = isEraser ? '#ffffff' : currentColor;
+  ctx.globalCompositeOperation = isEraser ? "destination-out" : "source-over";
+  ctx.lineWidth = isEraser ? 40 : 8;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+  if (!isEraser) colorsUsed[currentColor.toLowerCase()] = (colorsUsed[currentColor.toLowerCase()] || 0) + 1;
+  [lastX, lastY] = [pos.x, pos.y];
+}
+
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mousemove', draw);
+window.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('touchstart', startDrawing, {passive: false});
+canvas.addEventListener('touchmove', draw, {passive: false});
+canvas.addEventListener('touchend', () => drawing = false);
+
+// --- LÓGICA ---
+function updateUI() {
+  document.getElementById('coins').textContent = `💰 ${Math.floor(coins)}`;
+  document.getElementById('multDisplay').textContent = `📈 x${profitMultiplier.toFixed(2)}`;
+  document.getElementById('lvl-badge').textContent = `LVL ${level}`;
+  document.getElementById('timeCost').textContent = timeCost;
+  document.getElementById('profitCost').textContent = profitCost;
+  document.getElementById('exp-bar-fill').style.width = (exp / nextLevelExp) * 100 + "%";
+}
+
+function buyProfit() { 
+  if (coins >= profitCost) { 
+    coins -= profitCost; profitMultiplier += 0.05; 
+    profitCost = Math.floor(profitCost * 1.6); 
+    updateUI(); saveGame();
+  } 
+}
+
+function buyTime() { 
+  if (coins >= timeCost) { 
+    coins -= timeCost; baseTime += 5; 
+    timeCost = Math.floor(timeCost * 1.4); 
+    updateUI(); saveGame();
+  } 
+}
+
+function finishDrawing() {
+  clearInterval(currentTimer);
+  let totalInk = Object.values(colorsUsed).reduce((a, b) => a + b, 0);
+  let matchScore = 0;
+  Object.keys(colorsUsed).forEach(color => {
+    if (currentOrderObj.colors.some(c => c.toLowerCase() === color)) matchScore += (colorsUsed[color] / totalInk) * 100;
+  });
+  let quality = (totalInk < 50 ? 0 : (matchScore > 35 ? 2 : 1));
+  let finalPay = (quality * 50) * profitMultiplier;
+  coins += finalPay; 
+  gainExp(quality * 30 + 10);
+  alert(`Coincidencia: ${Math.floor(matchScore)}% - Ganaste: ${Math.floor(finalPay)} 💰`);
+  resetGame();
+  saveGame(); // Guardar al terminar trabajo
+}
+
+function gainExp(amount) {
+  exp += amount;
+  if (exp >= nextLevelExp) {
+    level++; exp = 0; nextLevelExp = Math.floor(nextLevelExp * 1.5);
+    profitMultiplier += 0.10; alert(`🎉 NIVEL ${level}!`);
+  }
+  updateUI();
+}
+
+function startOrder(orderIdx) {
+  currentOrderObj = orders[orderIdx];
+  document.getElementById('game').innerHTML = '';
+  document.getElementById('drawScreen').style.display = 'flex';
+  document.getElementById('orderTitle').textContent = `Pedido: ${currentOrderObj.name}`;
+  clearCanvas();
+  timeLeft = baseTime;
+  document.getElementById('timer').textContent = timeLeft;
+  currentTimer = setInterval(() => {
+    timeLeft--; document.getElementById('timer').textContent = timeLeft;
+    if (timeLeft <= 0) { clearInterval(currentTimer); resetGame(); alert("Tiempo agotado..."); }
+  }, 1000);
+  window.scrollTo(0,0);
+}
+
+function resetGame() { document.getElementById('drawScreen').style.display = 'none'; activeClients = 0; updateUI(); }
+function spawnClient() {
+  if (activeClients >= 3 || document.getElementById('drawScreen').style.display === 'flex') return;
+  activeClients++;
+  const order = orders[Math.floor(Math.random() * orders.length)];
+  const div = document.createElement('div');
+  div.className = 'client';
+  div.innerHTML = `<strong>Cliente Nuevo</strong><br>Pide: ${order.name}<br><button onclick="startOrder(${orders.indexOf(order)})" style="background:var(--primary); color:white; border:none; padding:10px; border-radius:10px; margin-top:10px; cursor:pointer;">Aceptar</button>`;
+  document.getElementById('game').appendChild(div);
+}
+
+// Herramientas básicas
+function setColor(color, btn) { isEraser = false; currentColor = color; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); if(btn) btn.classList.add('active'); }
+function setCustomColor(val) { setColor(val, null); }
+function setEraser() { isEraser = true; }
+function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); colorsUsed = {}; }
+function fillCanvas() { ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = currentColor; ctx.fillRect(0, 0, canvas.width, canvas.height); colorsUsed[currentColor.toLowerCase()] = (colorsUsed[currentColor.toLowerCase()] || 0) + 1000; }
+
+// INICIO
+loadGame();
+setInterval(spawnClient, 3000);
+updateUI();
+</script>
+</body>
+</html>
