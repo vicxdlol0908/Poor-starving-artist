@@ -3,286 +3,349 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Poor Starving Artist - A Commissions Game</title>
+<title>Poor Starving Artist - V3.1 (AI Update)</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Quicksand:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
   :root {
-    --primary: #6c5ce7;
-    --success: #00b894;
-    --danger: #d63031;
-    --bg: #f0f3f7;
-    --text: #2d3436;
-    --gold: #f1c40f;
-    --white: #ffffff;
+    --primary: #6c5ce7; --bg: #f8f9ff; --text: #2d3436;
+    --yellow: #f1c40f; --green: #00b894; --white: #ffffff; --danger: #ff4757;
   }
 
-  body { 
-    font-family: 'Quicksand', sans-serif; 
-    text-align: center; margin: 0; background: var(--bg); color: var(--text);
-    overflow-x: hidden; 
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+  body { font-family: 'Quicksand', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text); overflow: hidden; }
 
-  h1, h2, .stat-box, .shop-btn, .deliver-btn, #lvl-badge { font-family: 'Fredoka', sans-serif; }
-
-  #header {
-    background: var(--white); padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px;
-    position: sticky; top: 0; z-index: 100;
-  }
-
-  #exp-bar-container { width: 100%; height: 6px; background: #e0e0e0; position: absolute; bottom: 0; left: 0; }
-  #exp-bar-fill { width: 0%; height: 100%; background: var(--primary); transition: width 0.5s; }
-
-  .stat-box { font-size: 16px; font-weight: 600; background: #f8f9fa; padding: 6px 12px; border-radius: 50px; color: var(--primary); }
-  #lvl-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 10px; font-size: 14px; }
+  /* UI SUPERIOR */
+  #top-bar { background: var(--white); padding: 12px; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 100; position: relative; }
+  .stat-pill { background: #eeeeff; color: var(--primary); padding: 5px 12px; border-radius: 12px; font-weight: 700; font-size: 13px; }
   
-  .shop-btn { background: var(--gold); border: none; padding: 8px 12px; border-radius: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 0 #d4ac0d; }
-  .shop-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #d4ac0d; }
-
-  #game { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; min-height: 200px; }
-  .client { background: var(--white); padding: 20px; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); width: 200px; border-bottom: 5px solid var(--primary); transition: 0.3s; }
-
-  #drawScreen { display: none; flex-direction: column; align-items: center; padding: 10px; padding-bottom: 50px; }
+  .upgrade-row { display: flex; justify-content: center; gap: 5px; padding: 10px; background: var(--white); border-bottom: 2px solid var(--primary); flex-wrap: wrap; }
+  .btn-game { border: none; padding: 8px 10px; border-radius: 10px; font-family: 'Fredoka'; font-weight: 600; font-size: 11px; cursor: pointer; box-shadow: 0 3px 0 rgba(0,0,0,0.1); }
   
-  #canvas { 
-    border: 5px solid var(--white); border-radius: 20px; background: white; 
-    touch-action: none; 
-    cursor: crosshair; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-    width: 400px; max-width: 90vw; height: auto;
-  }
+  /* CONTENEDOR PRINCIPAL Y GALERÍA */
+  .container { padding: 20px; text-align: center; height: 75vh; overflow-y: auto; }
+  .client-card { background: var(--white); border-radius: 20px; padding: 20px; margin-bottom: 15px; border-bottom: 5px solid var(--primary); display: flex; flex-direction: column; align-items: center; }
+  .btn-accept { background: var(--primary); color: white; border: none; padding: 10px 30px; border-radius: 12px; font-family: 'Fredoka'; font-size: 16px; cursor: pointer; box-shadow: 0 4px 0 #4834d4; }
 
-  .toolbar { display: flex; gap: 8px; margin-bottom: 15px; background: var(--white); padding: 10px; border-radius: 50px; flex-wrap: wrap; justify-content: center; }
-  .tool-btn { width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; }
-  .tool-btn.active { border-color: var(--primary); transform: scale(1.1); }
-  .icon-btn { background: #f1f2f6; border: none; font-size: 18px; width: 38px; height: 38px; border-radius: 10px; cursor: pointer; }
+  /* PANTALLA DE DIBUJO */
+  #drawScreen { display: none; flex-direction: column; align-items: center; background: #dfe6e9; height: 100vh; width: 100vw; position: fixed; top: 0; left: 0; z-index: 500; }
+  
+  #timer-container { position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.7); padding: 5px 15px; border-radius: 15px; display: flex; align-items: center; gap: 8px; z-index: 1000; }
+  #timer { font-family: 'Fredoka'; font-size: 24px; color: white; min-width: 30px; text-align: center; }
+  .timer-label { color: #fab1a0; font-size: 10px; font-weight: bold; text-transform: uppercase; }
 
-  #timer { font-size: 32px; color: var(--danger); margin: 15px; font-weight: 600; }
-  .deliver-btn { background: var(--success); color: white; border: none; padding: 15px 40px; border-radius: 15px; font-size: 20px; box-shadow: 0 5px 0 #008f72; cursor: pointer; }
+  #canvas { background: white; border-radius: 15px; touch-action: none; margin-top: 60px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 
-  /* Estilo para el botón de reset opcional */
-  .reset-link { font-size: 10px; color: #a4b0be; text-decoration: none; margin-top: 20px; display: block; cursor: pointer; }
+  /* BARRA DE TAMAÑO DE PINCEL */
+  .size-slider-container { width: 90%; background: white; padding: 10px; border-radius: 15px; margin-top: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+  .size-slider { flex-grow: 1; -webkit-appearance: none; height: 8px; border-radius: 5px; background: #dfe6e9; outline: none; }
+  .size-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+
+  /* HERRAMIENTAS */
+  .brush-bar { display: flex; gap: 10px; margin: 10px 0; overflow-x: auto; width: 90%; padding: 5px; }
+  .brush-dot { width: 40px; height: 40px; border-radius: 12px; background: white; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 2px solid #ccc; }
+  .brush-dot.active { border-color: var(--primary); box-shadow: 0 0 10px var(--primary); transform: scale(1.1); }
+
+  /* MODALES */
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; align-items: center; justify-content: center; }
+  .modal-content { background: #2d3436; padding: 25px; border-radius: 30px; text-align: center; width: 85%; max-width: 320px; color: white; }
+  .light-slider { width: 100%; margin: 20px 0; height: 15px; border-radius: 10px; -webkit-appearance: none; background: linear-gradient(to right, #000, #fff); border: 1px solid #555; }
+  
+  .gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+  .thumb { background: white; border-radius: 10px; overflow: hidden; position: relative; border: 2px solid #ddd; }
+  .thumb img { width: 100%; display: block; }
+  .thumb-stars { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.7); color: gold; font-size: 12px; padding: 3px 0; text-align: center; }
 </style>
 </head>
 <body>
 
-<div id="header">
-  <div id="lvl-badge">LVL 1</div>
-  <div class="stat-box" id="coins">💰 0</div>
-  <div class="stat-box" id="multDisplay">📈 x1.0</div>
-  <button class="shop-btn" onclick="buyTime()">⏳ +5s (<span id="timeCost">50</span>)</button>
-  <button class="shop-btn" style="background:#00b894; color:white; box-shadow:0 4px 0 #008f72;" onclick="buyProfit()">💎 +5% (<span id="profitCost">100</span>)</button>
-  <div id="exp-bar-container"><div id="exp-bar-fill"></div></div>
+<div id="top-bar">
+  <div class="stat-pill">💰 <span id="coin-display">0</span></div>
+  <div class="stat-pill" style="background:var(--primary); color:white;">LVL <span id="lvl-display">1</span></div>
+  <div class="stat-pill">📈 x<span id="mult-display">1.00</span></div>
 </div>
 
-<h1 style="margin: 25px 0 5px; color: var(--primary);">Poor Starving Artist</h1>
-<p style="color: #a4b0be; font-weight: 700; font-size: 11px; text-transform: uppercase;">Cloud Save Active (Local) - v2.4</p>
+<div class="upgrade-row">
+  <button class="btn-game" style="background:var(--yellow);" onclick="upgradeTime()">⏳+5s (<span id="t-cost">50</span>)</button>
+  <button class="btn-game" style="background:var(--green); color:white;" onclick="upgradeProfit()">💎+5% (<span id="p-cost">100</span>)</button>
+  <button class="btn-game" style="background:#3d3d3d; color:white;" onclick="openModal('marketModal')">🛒 MERCADO</button>
+  <button class="btn-game" style="background:var(--primary); color:white;" onclick="toggleGallery()">🖼️ GALERÍA</button>
+</div>
 
-<div id="game"></div>
+<div id="mainMenu" class="container">
+  <h1 style="font-family:'Fredoka'; color:var(--primary); margin-bottom:5px;">Artist Studio</h1>
+  <div id="client-list"></div>
+</div>
+
+<div id="gallerySection" class="container" style="display:none;">
+  <h2 style="font-family:'Fredoka'; color:var(--primary);">Mi Galería</h2>
+  <div id="gallery-grid" class="gallery-grid"></div>
+  <button class="btn-accept" style="margin-top:20px; width:100%;" onclick="toggleGallery()">VOLVER</button>
+</div>
 
 <div id="drawScreen">
-  <h2 id="orderTitle"></h2>
-  <div class="toolbar">
-    <button class="tool-btn active" style="background: #2d3436;" onclick="setColor('#2d3436', this)"></button>
-    <button class="tool-btn" style="background: #ff7675;" onclick="setColor('#ff7675', this)"></button>
-    <button class="tool-btn" style="background: #74b9ff;" onclick="setColor('#74b9ff', this)"></button>
-    <button class="tool-btn" style="background: #55efc4;" onclick="setColor('#55efc4', this)"></button>
-    <button class="tool-btn" style="background: #ffeaa7;" onclick="setColor('#ffeaa7', this)"></button>
-    <input type="color" id="colorPicker" value="#6c5ce7" onchange="setCustomColor(this.value)">
-    <button class="icon-btn" onclick="fillCanvas()">🪣</button>
-    <button class="icon-btn" onclick="setEraser()">🧽</button>
-    <button class="icon-btn" onclick="clearCanvas()">🗑️</button>
+  <div id="timer-container"><span class="timer-label">Tiempo</span><span id="timer">20</span></div>
+  <div id="draw-task" style="position:absolute; top:15px; left:15px; font-weight:bold; font-family:'Fredoka'; color:#2d3436; font-size:16px; background:rgba(255,255,255,0.9); padding:5px 12px; border-radius:10px;"></div>
+
+  <canvas id="canvas" width="320" height="380"></canvas>
+
+  <div class="size-slider-container">
+    <span style="font-size: 12px; font-weight:bold; color:var(--text);">Min</span>
+    <input type="range" id="brushSize" class="size-slider" min="1" max="40" value="8">
+    <span style="font-size: 18px; font-weight:bold; color:var(--text);">Max</span>
   </div>
-  <canvas id="canvas" width="400" height="400"></canvas>
-  <div id="timer">20</div>
-  <button class="deliver-btn" onclick="finishDrawing()">¡ENTREGAR!</button>
+
+  <div class="brush-bar" id="brush-selector">
+    <div class="brush-dot active" onclick="setBrush('normal', this)">🖌️</div>
+  </div>
+
+  <div style="display: flex; gap: 10px; background: white; padding: 12px; border-radius: 25px; width: 85%; justify-content: space-around; box-shadow: 0 5px 20px rgba(0,0,0,0.2); margin-bottom:10px;">
+    <button id="colorBtn" onclick="openPicker()" style="width:50px; height:50px; border-radius:50%; border:4px solid #f0f0f0; background:red;"></button>
+    <button class="btn-game" style="background:#f1f2f6; font-size:22px; width:55px;" onclick="undo()">↩️</button>
+    <button class="btn-accept" style="padding: 10px 25px;" onclick="processAI()">VENDER</button>
+  </div>
 </div>
 
-<span class="reset-link" onclick="resetSave()">Borrar progreso y empezar de cero</span>
+<div id="aiModal" class="modal">
+  <div class="modal-content">
+    <h2 style="font-family:'Fredoka'; color:var(--yellow);">🤖 Análisis IA</h2>
+    <p>Comparando dibujo con el pedido...</p>
+    <div id="ai-stars" style="font-size: 40px; margin: 15px 0; text-shadow: 0 0 10px gold;">⭐⭐⭐⭐⭐</div>
+    <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:15px; margin-bottom:15px;">
+      <h3 style="margin:0; font-family:'Fredoka'; color:var(--green);">PAGO FINAL:</h3>
+      <h1 style="margin:5px 0 0; color:white;">💰 <span id="ai-payout">0</span></h1>
+    </div>
+    <button class="btn-accept" style="width:100%; background:var(--primary);" onclick="acceptPayout()">¡COBRAR!</button>
+  </div>
+</div>
+
+<div id="colorModal" class="modal">
+  <div class="modal-content">
+    <canvas id="wheelCanvas" width="220" height="220"></canvas>
+    <input type="range" id="lightSlider" class="light-slider" min="0" max="100" value="50">
+    <div style="font-family:'Fredoka'; margin-bottom:15px;">AJUSTAR BRILLO</div>
+    <button class="btn-accept" style="width:100%; background:var(--green);" onclick="closePicker()">LISTO</button>
+  </div>
+</div>
+
+<div id="marketModal" class="modal">
+  <div class="modal-content" style="background:white; width:85%; color:var(--text);">
+    <h2 style="font-family:'Fredoka'; color:var(--primary);">Mercado Pro</h2>
+    <div id="market-list" style="max-height:300px; overflow-y:auto;"></div>
+    <button class="btn-accept" style="width:100%; margin-top:20px;" onclick="closeModal('marketModal')">CERRAR</button>
+  </div>
+</div>
 
 <script>
-// --- VARIABLES Y ESTADO ---
-let coins = 0, baseTime = 20, timeCost = 50, profitMultiplier = 1.0, profitCost = 100;
-let level = 1, exp = 0, nextLevelExp = 100;
-let currentTimer, timeLeft = 0, activeClients = 0;
-let drawing = false, lastX = 0, lastY = 0, currentColor = '#2d3436', isEraser = false;
-let currentOrderObj, colorsUsed = {};
+let coins = 0, level = 1, ownedItems = ['normal'], drawings = [];
+let baseTime = 20, timeCost = 50, profitMult = 1.0, profitCost = 100;
+let currentBrush = 'normal', currentSize = 8, currentHue = 0, currentLight = 50, currentColor = "hsl(0, 100%, 50%)";
+let drawing = false, undoStack = [], currentTask = "", pendingPayout = 0;
+
+const marketItems = [
+  { id: 'pencil', name: 'Lápiz Grafito', cost: 1500, icon: '✏️' },
+  { id: 'airbrush', name: 'Aerógrafo Pro', cost: 2200, icon: '💨' },
+  { id: 'stars', name: 'Pincel Estelar', cost: 3000, icon: '⭐' },
+  { id: 'rainbow', name: 'Pincel Arcoiris', cost: 5000, icon: '🌈' }
+];
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
+const wheelCanvas = document.getElementById('wheelCanvas');
+const wCtx = wheelCanvas.getContext('2d');
 
-const orders = [
-  { name: "un Sol ☀️", colors: ['#ffeaa7', '#fdcb6e', '#f1c40f', '#ff7675'] },
-  { name: "el Mar 🌊", colors: ['#74b9ff', '#0984e3', '#81ecec'] },
-  { name: "una Manzana 🍎", colors: ['#ff7675', '#d63031', '#55efc4'] },
-  { name: "un Bosque 🌳", colors: ['#55efc4', '#00b894', '#2d3436'] },
-  { name: "la Luna 🌙", colors: ['#2d3436', '#6c5ce7', '#ffeaa7'] },
-  { name: "un Corazón ❤️", colors: ['#ff7675', '#d63031'] }
-];
+// --- SISTEMA DE TAMAÑO DE PINCEL ---
+document.getElementById('brushSize').oninput = function() {
+  currentSize = parseInt(this.value);
+};
 
-// --- SISTEMA DE GUARDADO (AUTO-SAVE) ---
-function saveGame() {
-  const gameState = {
-    coins, baseTime, timeCost, profitMultiplier, profitCost,
-    level, exp, nextLevelExp
-  };
-  localStorage.setItem('starvingArtistSave', JSON.stringify(gameState));
-  console.log("Juego guardado...");
-}
-
-function loadGame() {
-  const savedData = localStorage.getItem('starvingArtistSave');
-  if (savedData) {
-    const data = JSON.parse(savedData);
-    coins = data.coins || 0;
-    baseTime = data.baseTime || 20;
-    timeCost = data.timeCost || 50;
-    profitMultiplier = data.profitMultiplier || 1.0;
-    profitCost = data.profitCost || 100;
-    level = data.level || 1;
-    exp = data.exp || 0;
-    nextLevelExp = data.nextLevelExp || 100;
-    updateUI();
+// --- SISTEMA DE COLOR ---
+function drawWheel() {
+  const cx = 110, cy = 110; wCtx.clearRect(0,0,220,220);
+  for(let i=0; i<360; i++) {
+    wCtx.strokeStyle = `hsl(${i}, 100%, 50%)`; wCtx.lineWidth = 20; wCtx.beginPath();
+    wCtx.arc(cx, cy, 90, (i*Math.PI/180), ((i+2)*Math.PI/180)); wCtx.stroke();
   }
+  wCtx.fillStyle = `hsl(${currentHue}, 100%, ${currentLight}%)`; wCtx.beginPath();
+  wCtx.arc(cx, cy, 50, 0, Math.PI*2); wCtx.fill();
+  wCtx.strokeStyle="white"; wCtx.lineWidth=4; wCtx.stroke();
 }
 
-function resetSave() {
-  if(confirm("¿Seguro que quieres borrar todo tu progreso artístico?")) {
-    localStorage.removeItem('starvingArtistSave');
-    location.reload();
-  }
-}
+document.getElementById('lightSlider').oninput = function() {
+  currentLight = this.value; currentColor = `hsl(${currentHue}, 100%, ${currentLight}%)`;
+  document.getElementById('colorBtn').style.background = currentColor; drawWheel();
+};
 
-// --- MOTOR DE DIBUJO ---
+wheelCanvas.addEventListener('touchstart', (e) => {
+  const rect = wheelCanvas.getBoundingClientRect();
+  const x = e.touches[0].clientX - rect.left - 110; const y = e.touches[0].clientY - rect.top - 110;
+  currentHue = (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  currentColor = `hsl(${currentHue}, 100%, ${currentLight}%)`;
+  document.getElementById('colorBtn').style.background = currentColor; drawWheel();
+});
+
+// --- DIBUJO ---
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  const client = e.touches ? e.touches[0] : e;
+  return { x: (client.clientX - rect.left) * (canvas.width/rect.width), y: (client.clientY - rect.top) * (canvas.height/rect.height) };
 }
 
-function startDrawing(e) {
-  const pos = getPos(e);
-  drawing = true;
-  [lastX, lastY] = [pos.x, pos.y];
-}
+canvas.addEventListener('touchstart', (e) => {
+  drawing = true; undoStack.push(canvas.toDataURL());
+  const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y);
+});
 
-function draw(e) {
-  if (!drawing) return;
-  if (e.cancelable) e.preventDefault();
-  const pos = getPos(e);
-  ctx.beginPath();
-  ctx.strokeStyle = isEraser ? '#ffffff' : currentColor;
-  ctx.globalCompositeOperation = isEraser ? "destination-out" : "source-over";
-  ctx.lineWidth = isEraser ? 40 : 8;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(pos.x, pos.y);
-  ctx.stroke();
-  if (!isEraser) colorsUsed[currentColor.toLowerCase()] = (colorsUsed[currentColor.toLowerCase()] || 0) + 1;
-  [lastX, lastY] = [pos.x, pos.y];
-}
+canvas.addEventListener('touchmove', (e) => {
+  if (!drawing) return; e.preventDefault();
+  const pos = getPos(e); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
-canvas.addEventListener('mousedown', startDrawing);
-canvas.addEventListener('mousemove', draw);
-window.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('touchstart', startDrawing, {passive: false});
-canvas.addEventListener('touchmove', draw, {passive: false});
-canvas.addEventListener('touchend', () => drawing = false);
+  // Usamos el currentSize modificado por la barrita
+  if (currentBrush === 'normal') { ctx.lineWidth = currentSize; ctx.globalAlpha = 1; ctx.strokeStyle = currentColor; }
+  else if (currentBrush === 'pencil') { ctx.lineWidth = currentSize / 3 + 1; ctx.globalAlpha = 0.5; ctx.strokeStyle = "#444"; }
+  else if (currentBrush === 'airbrush') { ctx.shadowBlur = 10; ctx.shadowColor = currentColor; ctx.lineWidth = currentSize * 1.5; ctx.globalAlpha = 0.1; ctx.strokeStyle = currentColor; }
+  else if (currentBrush === 'stars') { ctx.font = `${currentSize + 10}px serif`; ctx.fillText("⭐", pos.x, pos.y); return; }
+  else if (currentBrush === 'rainbow') { ctx.lineWidth = currentSize; ctx.strokeStyle = `hsl(${Date.now() % 360}, 100%, 50%)`; }
+  
+  ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.shadowBlur = 0;
+});
+window.addEventListener('touchend', () => drawing = false);
+function undo() { if(undoStack.length>0) { let img=new Image(); img.src=undoStack.pop(); img.onload=()=>ctx.drawImage(img,0,0); } }
 
-// --- LÓGICA ---
-function updateUI() {
-  document.getElementById('coins').textContent = `💰 ${Math.floor(coins)}`;
-  document.getElementById('multDisplay').textContent = `📈 x${profitMultiplier.toFixed(2)}`;
-  document.getElementById('lvl-badge').textContent = `LVL ${level}`;
-  document.getElementById('timeCost').textContent = timeCost;
-  document.getElementById('profitCost').textContent = profitCost;
-  document.getElementById('exp-bar-fill').style.width = (exp / nextLevelExp) * 100 + "%";
-}
-
-function buyProfit() { 
-  if (coins >= profitCost) { 
-    coins -= profitCost; profitMultiplier += 0.05; 
-    profitCost = Math.floor(profitCost * 1.6); 
-    updateUI(); saveGame();
-  } 
-}
-
-function buyTime() { 
-  if (coins >= timeCost) { 
-    coins -= timeCost; baseTime += 5; 
-    timeCost = Math.floor(timeCost * 1.4); 
-    updateUI(); saveGame();
-  } 
-}
-
-function finishDrawing() {
-  clearInterval(currentTimer);
-  let totalInk = Object.values(colorsUsed).reduce((a, b) => a + b, 0);
-  let matchScore = 0;
-  Object.keys(colorsUsed).forEach(color => {
-    if (currentOrderObj.colors.some(c => c.toLowerCase() === color)) matchScore += (colorsUsed[color] / totalInk) * 100;
-  });
-  let quality = (totalInk < 50 ? 0 : (matchScore > 35 ? 2 : 1));
-  let finalPay = (quality * 50) * profitMultiplier;
-  coins += finalPay; 
-  gainExp(quality * 30 + 10);
-  alert(`Coincidencia: ${Math.floor(matchScore)}% - Ganaste: ${Math.floor(finalPay)} 💰`);
-  resetGame();
-  saveGame(); // Guardar al terminar trabajo
-}
-
-function gainExp(amount) {
-  exp += amount;
-  if (exp >= nextLevelExp) {
-    level++; exp = 0; nextLevelExp = Math.floor(nextLevelExp * 1.5);
-    profitMultiplier += 0.10; alert(`🎉 NIVEL ${level}!`);
-  }
-  updateUI();
-}
-
-function startOrder(orderIdx) {
-  currentOrderObj = orders[orderIdx];
-  document.getElementById('game').innerHTML = '';
+// --- FLUJO DEL JUEGO E IA ---
+function startDraw(item, btn) {
+  btn.parentElement.remove(); currentTask = item;
+  document.getElementById('mainMenu').style.display = 'none';
   document.getElementById('drawScreen').style.display = 'flex';
-  document.getElementById('orderTitle').textContent = `Pedido: ${currentOrderObj.name}`;
-  clearCanvas();
-  timeLeft = baseTime;
-  document.getElementById('timer').textContent = timeLeft;
-  currentTimer = setInterval(() => {
-    timeLeft--; document.getElementById('timer').textContent = timeLeft;
-    if (timeLeft <= 0) { clearInterval(currentTimer); resetGame(); alert("Tiempo agotado..."); }
+  document.getElementById('draw-task').innerText = "Pide: " + item;
+  
+  ctx.fillStyle = "white"; ctx.fillRect(0,0,canvas.width,canvas.height);
+  
+  let time = baseTime; const timerEl = document.getElementById('timer');
+  timerEl.innerText = time; timerEl.style.color = "white";
+
+  clearInterval(window.timerInterval);
+  window.timerInterval = setInterval(() => {
+    time--; timerEl.innerText = time;
+    if(time <= 5) timerEl.style.color = "var(--danger)";
+    if(time <= 0) processAI();
   }, 1000);
-  window.scrollTo(0,0);
 }
 
-function resetGame() { document.getElementById('drawScreen').style.display = 'none'; activeClients = 0; updateUI(); }
-function spawnClient() {
-  if (activeClients >= 3 || document.getElementById('drawScreen').style.display === 'flex') return;
-  activeClients++;
-  const order = orders[Math.floor(Math.random() * orders.length)];
-  const div = document.createElement('div');
-  div.className = 'client';
-  div.innerHTML = `<strong>Cliente Nuevo</strong><br>Pide: ${order.name}<br><button onclick="startOrder(${orders.indexOf(order)})" style="background:var(--primary); color:white; border:none; padding:10px; border-radius:10px; margin-top:10px; cursor:pointer;">Aceptar</button>`;
-  document.getElementById('game').appendChild(div);
+// LA NUEVA IA 🤖
+function processAI() {
+  clearInterval(window.timerInterval);
+  
+  // Escaneo del lienzo: cuenta píxeles que no son blancos
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let paintedPixels = 0;
+  for(let i=0; i<imgData.length; i+=4) {
+    if(imgData[i] < 250 || imgData[i+1] < 250 || imgData[i+2] < 250) paintedPixels++;
+  }
+  
+  const totalPixels = canvas.width * canvas.height;
+  const coverage = paintedPixels / totalPixels;
+  
+  let stars = 1;
+  // Algoritmo de la IA: si cubrís suficiente lienzo, te da mejor puntaje.
+  if (coverage > 0.08) stars = Math.floor(Math.random() * 2) + 4; // 4 o 5 estrellas
+  else if (coverage > 0.03) stars = Math.floor(Math.random() * 2) + 2; // 2 o 3 estrellas
+  else stars = 1; // 1 estrella si casi ni dibujaste
+  
+  const baseReward = 40;
+  pendingPayout = Math.floor(baseReward * stars * profitMult);
+  
+  document.getElementById('ai-stars').innerText = '⭐'.repeat(stars) + '☆'.repeat(5-stars);
+  document.getElementById('ai-payout').innerText = pendingPayout;
+  
+  // Guardar en galería
+  drawings.push({ data: canvas.toDataURL(), stars: stars, task: currentTask });
+  
+  openModal('aiModal');
 }
 
-// Herramientas básicas
-function setColor(color, btn) { isEraser = false; currentColor = color; document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active')); if(btn) btn.classList.add('active'); }
-function setCustomColor(val) { setColor(val, null); }
-function setEraser() { isEraser = true; }
-function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); colorsUsed = {}; }
-function fillCanvas() { ctx.globalCompositeOperation = "source-over"; ctx.fillStyle = currentColor; ctx.fillRect(0, 0, canvas.width, canvas.height); colorsUsed[currentColor.toLowerCase()] = (colorsUsed[currentColor.toLowerCase()] || 0) + 1000; }
+function acceptPayout() {
+  coins += pendingPayout;
+  save(); updateUI();
+  closeModal('aiModal');
+  document.getElementById('drawScreen').style.display = 'none';
+  document.getElementById('mainMenu').style.display = 'block';
+}
 
-// INICIO
-loadGame();
-setInterval(spawnClient, 3000);
-updateUI();
+// --- GALERÍA, TIENDA Y CLIENTES ---
+function toggleGallery() {
+  const gal = document.getElementById('gallerySection');
+  const main = document.getElementById('mainMenu');
+  if(gal.style.display === 'none') {
+    gal.style.display = 'block'; main.style.display = 'none';
+    const grid = document.getElementById('gallery-grid');
+    grid.innerHTML = '';
+    drawings.slice().reverse().forEach(d => {
+      grid.innerHTML += `<div class="thumb"><img src="${d.data}"><div class="thumb-stars">${'⭐'.repeat(d.stars)}</div></div>`;
+    });
+  } else { gal.style.display = 'none'; main.style.display = 'block'; }
+}
+
+function createClient() {
+  if (document.querySelectorAll('.client-card').length >= 3) return;
+  const items = ["Gato 🐱", "Pizza 🍕", "Fuego 🔥", "Alien 👽", "Mate 🧉", "Pato 🦆"];
+  const item = items[Math.floor(Math.random()*items.length)];
+  const card = document.createElement('div');
+  card.className = 'client-card';
+  card.innerHTML = `<h3>Cliente Nuevo</h3><p>Quiere: ${item}</p><button class="btn-accept" onclick="startDraw('${item}', this)">Aceptar</button>`;
+  document.getElementById('client-list').appendChild(card);
+}
+setInterval(createClient, 5000);
+
+function renderMarket() {
+  const list = document.getElementById('market-list');
+  list.innerHTML = '';
+  marketItems.forEach(item => {
+    const isOwned = ownedItems.includes(item.id);
+    list.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; padding:15px; border-bottom:1px solid #eee;">
+      <div style="text-align:left;"><b>${item.icon} ${item.name}</b><br><small>💰${item.cost}</small></div>
+      <button class="btn-game" style="background:var(--green); color:white;" onclick="buyItem('${item.id}', ${item.cost})" ${isOwned?'disabled':''}>${isOwned?'COMPRADO':'COMPRAR'}</button>
+    </div>`;
+  });
+}
+
+function buyItem(id, cost) {
+  if(coins >= cost) { coins -= cost; ownedItems.push(id); updateUI(); renderMarket(); updateBrushBar(); save(); }
+  else alert("¡Te faltan monedas!");
+}
+
+function updateBrushBar() {
+  const bar = document.getElementById('brush-selector');
+  bar.innerHTML = '<div class="brush-dot active" onclick="setBrush(\'normal\', this)">🖌️</div>';
+  marketItems.forEach(item => {
+    if(ownedItems.includes(item.id)) bar.innerHTML += `<div class="brush-dot" onclick="setBrush('${item.id}', this)">${item.icon}</div>`;
+  });
+}
+
+function setBrush(type, el) { currentBrush = type; document.querySelectorAll('.brush-dot').forEach(d => d.classList.remove('active')); el.classList.add('active'); }
+
+function upgradeTime() { if(coins>=timeCost){ coins-=timeCost; baseTime+=5; timeCost*=2; updateUI(); save(); } }
+function upgradeProfit() { if(coins>=profitCost){ coins-=profitCost; profitMult+=0.05; profitCost*=2; updateUI(); save(); } }
+
+function openModal(id) { document.getElementById(id).style.display = 'flex'; if(id==='marketModal') renderMarket(); }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function openPicker() { openModal('colorModal'); drawWheel(); }
+function closePicker() { closeModal('colorModal'); }
+
+function updateUI() {
+  document.getElementById('coin-display').innerText = coins;
+  document.getElementById('lvl-display').innerText = level;
+  document.getElementById('mult-display').innerText = profitMult.toFixed(2);
+  document.getElementById('t-cost').innerText = timeCost;
+  document.getElementById('p-cost').innerText = profitCost;
+}
+
+function save() { localStorage.setItem('starving_v31', JSON.stringify({coins, level, ownedItems, timeCost, profitCost, profitMult, baseTime, drawings})); }
+function load() {
+  const s = JSON.parse(localStorage.getItem('starving_v31'));
+  if(s) { coins=s.coins; level=s.level; ownedItems=s.ownedItems; timeCost=s.timeCost; profitCost=s.profitCost; profitMult=s.profitMult; baseTime=s.baseTime; drawings=s.drawings||[]; }
+}
+
+load(); updateUI(); createClient(); updateBrushBar();
 </script>
 </body>
-</html>
+      </html>
